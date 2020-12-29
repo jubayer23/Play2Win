@@ -42,7 +42,7 @@ class GameOverFragment : Fragment() {
         // Inflate the layout for this fragment
         val binding: FragmentGameOverBinding = DataBindingUtil.inflate(
                 inflater, R.layout.fragment_game_over, container, false)
-        binding.tryAgainButton.setOnClickListener {
+        /*binding.tryAgainButton.setOnClickListener {
 
             if (navGraphScopedViewModel.isLoggedIn()) {
                 navGraphScopedViewModel.getProfile()?.let { it1 -> makeTransactionFive(it1) }
@@ -51,7 +51,7 @@ class GameOverFragment : Fragment() {
             }
 
 
-        }
+        }*/
 
         binding.homeButton.setOnClickListener { findNavController().navigate(GameOverFragmentDirections.actionGameOverFragment2ToWelcomeFragment())
         }
@@ -59,32 +59,5 @@ class GameOverFragment : Fragment() {
     }
 
 
-    private fun makeTransactionFive(profileInfo: ProfileInfo){
-        navGraphScopedViewModel.makeTransactionFive(profileInfo.account, profileInfo.pk).observe(this, Observer {
-            it?.let { resource ->
-                Log.d("DEBUG", resource.status.toString())
-                when (resource.status) {
-                    Status.SUCCESS -> {
-                        //recyclerView.visibility = View.VISIBLE
-                        progressBar.visibility = View.GONE
-
-                        Log.d("DEBUG", "its here")
-                        //navGraphScopedViewModel.changeValue(false)
-                        //Navigation.createNavigateOnClickListener(R.id.action_welcomeFragment_to_gameFragment)
-                        findNavController().navigate(GameOverFragmentDirections.actionGameOverFragment2ToGameFragment())
-
-                    }
-                    Status.ERROR -> {
-                        //recyclerView.visibility = View.VISIBLE
-                        progressBar.visibility = View.GONE
-
-                    }
-                    Status.LOADING -> {
-                        progressBar.visibility = View.VISIBLE
-
-                    }
-                }
-            }
-        })
-    }
+   
 }

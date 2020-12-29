@@ -96,7 +96,7 @@ class WelcomeFragment : Fragment() {
 
 
     private fun loadAccount() {
-        navGraphScopedViewModel.getBalance().observe(this, Observer {
+        navGraphScopedViewModel.getBalance().observe(viewLifecycleOwner, Observer {
             it?.let { resource ->
                 Log.d("DEBUG", resource.status.toString())
                 when (resource.status) {
@@ -121,7 +121,7 @@ class WelcomeFragment : Fragment() {
 
 
     private fun makeTransactionFive(profileInfo: ProfileInfo){
-        navGraphScopedViewModel.makeTransactionFive(profileInfo.account, profileInfo.pk).observe(this, Observer {
+        navGraphScopedViewModel.makeTransactionFive(profileInfo.account, profileInfo.pk).observe(viewLifecycleOwner, Observer {
             it?.let { resource ->
                 Log.d("DEBUG", resource.status.toString())
                 when (resource.status) {
