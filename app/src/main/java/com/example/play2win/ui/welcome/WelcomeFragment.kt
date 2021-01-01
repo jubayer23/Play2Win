@@ -55,8 +55,9 @@ class WelcomeFragment : Fragment() {
         // Inflate the layout for this fragment
 
         binding = DataBindingUtil.inflate(
-                inflater,
-                R.layout.fragment_welcome, container, false)
+            inflater,
+            R.layout.fragment_welcome, container, false
+        )
 
         binding.viewModel = navGraphScopedViewModel
 
@@ -64,21 +65,16 @@ class WelcomeFragment : Fragment() {
         (activity as AppCompatActivity?)!!.supportActionBar!!.hide()
 
         binding.btnWin100.setOnClickListener {
-            if (navGraphScopedViewModel.isLoggedIn()) {
-                navGraphScopedViewModel.getProfile()?.let { it1 -> makeTransactionFive(it1) }
-            } else {
-                Toast.makeText(activity, "Load Account first!", Toast.LENGTH_LONG).show()
-            }
-
+            makeTransactionFive()
         }
 
-        binding.btnWin200.setOnClickListener (
-          //findNavController().navigate(R.id.gameFragment)
-          Navigation.createNavigateOnClickListener(R.id.action_welcomeFragment_to_gameFragment)
-            )
+        binding.btnWin200.setOnClickListener {
+        //findNavController().navigate(R.id.gameFragment)
+        makeTransactionFive()
+    }
 
         binding.tvLoadReload.setOnClickListener {
-            findNavController().navigate(R.id.editProfileFragment)
+            findNavController().navigate(R.id.loadAccountFragment)
         }
 
         observeViewModel()
@@ -90,12 +86,16 @@ class WelcomeFragment : Fragment() {
 
     fun observeViewModel(){
         navGraphScopedViewModel.refreshBalance.observe(viewLifecycleOwner, Observer {
-            loadAccount()
+            loadBalance()
+        })
+
+        navGraphScopedViewModel.errorListenerLiveData.observe(viewLifecycleOwner, Observer { error ->
+            Toast.makeText(activity,error,Toast.LENGTH_LONG).show()
         })
     }
 
 
-    private fun loadAccount() {
+    private fun loadBalance() {
         navGraphScopedViewModel.getBalance().observe(viewLifecycleOwner, Observer {
             it?.let { resource ->
                 Log.d("DEBUG", resource.status.toString())
@@ -103,7 +103,8 @@ class WelcomeFragment : Fragment() {
                     Status.SUCCESS -> {
                         progressBar.visibility = View.GONE
                         resource.data?.let { seed -> Log.d("DEBUG", seed.toString())
-                            navGraphScopedViewModel.saveProfile( seed.balance)
+                            //navGraphScopedViewModel.saveProfile( seed.balance)
+                            navGraphScopedViewModel.saveBalance(seed.balance)
                         }
                     }
                     Status.ERROR -> {
@@ -120,8 +121,8 @@ class WelcomeFragment : Fragment() {
 
 
 
-    private fun makeTransactionFive(profileInfo: ProfileInfo){
-        navGraphScopedViewModel.makeTransactionFive(profileInfo.account, profileInfo.pk).observe(viewLifecycleOwner, Observer {
+    private fun makeTransactionFive(){
+        navGraphScopedViewModel.makeTransactionFive().observe(viewLifecycleOwner, Observer {
             it?.let { resource ->
                 Log.d("DEBUG", resource.status.toString())
                 when (resource.status) {

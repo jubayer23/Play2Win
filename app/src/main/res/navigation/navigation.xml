@@ -89,9 +89,15 @@
 
 
     <dialog
-        android:id="@+id/editProfileFragment"
-        android:name="com.example.play2win.ui.AccountLoadDialog"
+        android:id="@+id/loadAccountFragment"
+        android:name="com.example.play2win.ui.loadAccount.LoadAccountDialog"
         android:label="Edit Profile"
-        tools:layout="@layout/fragment_edit_profile"/>
+        tools:layout="@layout/fragment_load_account"/>
+
+    <dialog
+        android:id="@+id/createAccountFragment"
+        android:name="com.example.play2win.ui.createAccount.CreateAccountDialog"
+        android:label="Create Profile"
+        tools:layout="@layout/fragment_create_account"/>
 
 </navigation>

@@ -12,5 +12,11 @@ interface ILocalAuthRepository {
 
     fun clearCurrentProfile()
 
+    fun getCurrentUser(): UserProfile?
+
+    fun setCurrentUser(userProfile: UserProfile)
+
+    fun clearCurrentUser()
+
     fun observeAuthState(): LiveData<Boolean>
 }

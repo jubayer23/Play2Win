@@ -28,7 +28,7 @@
  * THE SOFTWARE.
  */
 
-package com.example.play2win.ui
+package com.example.play2win.ui.loadAccount
 
 import android.os.Bundle
 import android.util.Log
@@ -39,26 +39,37 @@ import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.navGraphViewModels
 import com.example.play2win.ProfileInfo
 import com.example.play2win.R
-import com.example.play2win.databinding.FragmentEditProfileBinding
+import com.example.play2win.databinding.FragmentLoadAccountBinding
+import com.mindorks.retrofit.coroutines.data.api.ApiHelper
+import com.mindorks.retrofit.coroutines.data.api.RetrofitBuilder
+import com.mindorks.retrofit.coroutines.ui.base.ViewModelFactory
 import com.mindorks.retrofit.coroutines.ui.main.viewmodel.LoadWalletViewModel
 import com.mindorks.retrofit.coroutines.utils.Status
-import kotlinx.android.synthetic.main.fragment_edit_profile.*
+import kotlinx.android.synthetic.main.fragment_load_account.*
 
-class AccountLoadDialog : DialogFragment() {
+class LoadAccountDialog : DialogFragment() {
 
   private val navGraphScopedViewModel: LoadWalletViewModel by navGraphViewModels(R.id.navigation)
+  //val loadAccountViewModel: LoadAccountViewModel by lazy { ViewModelProviders.of(this).get(LoadAccountViewModel::class.java) }
+  val loadAccountViewModel: LoadAccountViewModel by lazy {
+    ViewModelProviders.of(this,
+      activity?.let { ViewModelFactory(ApiHelper(RetrofitBuilder.apiService), it) }).get(LoadAccountViewModel::class.java)
+  }
 
   override fun onCreateView(
     inflater: LayoutInflater, container: ViewGroup?,
     savedInstanceState: Bundle?
   ): View? {
-    val binding: FragmentEditProfileBinding = DataBindingUtil.inflate(
-      inflater, R.layout.fragment_edit_profile, container, false
+    val binding: FragmentLoadAccountBinding = DataBindingUtil.inflate(
+      inflater, R.layout.fragment_load_account, container, false
     )
-    binding.viewModel = navGraphScopedViewModel
+    binding.navViewModel = navGraphScopedViewModel
+    binding.viewModel = loadAccountViewModel
     return binding.root
   }
 
@@ -70,32 +81,50 @@ class AccountLoadDialog : DialogFragment() {
         ViewGroup.LayoutParams.MATCH_PARENT,
         ViewGroup.LayoutParams.WRAP_CONTENT
       )
-      navGraphScopedViewModel.loadProfile()
+      loadAccountViewModel.loadUser()
+     // navGraphScopedViewModel.loadProfile()
 
     }
 
     dialog?.setOnDismissListener {
-        navGraphScopedViewModel.clearFormError()
+       // navGraphScopedViewModel.clearFormError()
     }
 
     btnSave.setOnClickListener {
-      if(navGraphScopedViewModel.isFormValid())
+      //if(navGraphScopedViewModel.isFormValid())
       loadAccount()
     }
+
+    tv_create_account.setOnClickListener{
+      dialog?.setOnDismissListener {  findNavController().navigate(R.id.createAccountFragment) }
+      dialog?.dismiss()
+
+
+    }
+
+
 
   }
 
 
   private fun loadAccount() {
-    navGraphScopedViewModel.getBalance().observe(this, Observer {
+    loadAccountViewModel.getAccount().observe(this, Observer {
       it?.let { resource ->
         Log.d("DEBUG", resource.status.toString())
         when (resource.status) {
           Status.SUCCESS -> {
             progressBar.visibility = View.GONE
-            resource.data?.let { seed -> Log.d("DEBUG", seed.toString())
-              navGraphScopedViewModel.saveProfile( seed.balance)
-              dismiss()
+            resource.data?.let { account ->
+              //navGraphScopedViewModel.saveProfile( seed.balance)
+              //Log.d("DEBUG", account.toString())
+             if(account.status){
+               loadAccountViewModel.saveProfile( account)
+               navGraphScopedViewModel.loadUser()
+               navGraphScopedViewModel.refreshBalance()
+               dismiss()
+             }else{
+               Toast.makeText(activity, "Invalid credentials!", Toast.LENGTH_LONG).show()
+             }
             }
           }
           Status.ERROR -> {

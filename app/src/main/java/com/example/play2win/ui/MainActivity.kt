@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
 
         setupViewModel()
 
-        viewModel?.loadProfile()
+        viewModel?.loadUser()
     }
 
     override fun onResume() {

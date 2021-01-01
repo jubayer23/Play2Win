@@ -9,6 +9,7 @@ import androidx.lifecycle.liveData
 import com.example.metamask.repository.MainRepository
 import com.example.play2win.LocalAuthRepository
 import com.example.play2win.ProfileInfo
+import com.example.play2win.UserProfile
 import com.mindorks.retrofit.coroutines.utils.Resource
 import kotlinx.coroutines.Dispatchers
 
@@ -18,8 +19,11 @@ class LoadWalletViewModel(private val mainRepository: MainRepository, private va
     private val mutableRefreshBalance: MutableLiveData<Unit> = MutableLiveData()
     val refreshBalance: LiveData<Unit> = mutableRefreshBalance
 
-    private val mutableProfileInfo: MutableLiveData<ProfileInfo> = MutableLiveData()
-    val profileInfoLiveData: LiveData<ProfileInfo> = mutableProfileInfo
+    private val mutableErrorListener: MutableLiveData<String> = MutableLiveData()
+    val errorListenerLiveData: LiveData<String> = mutableErrorListener
+
+    private val mutableUserProfile: MutableLiveData<UserProfile> = MutableLiveData()
+    val userProfileLiveData: LiveData<UserProfile> = mutableUserProfile
 
     var accoundId = ObservableField("")
     var privateKey = ObservableField("")
@@ -30,7 +34,7 @@ class LoadWalletViewModel(private val mainRepository: MainRepository, private va
 
 
     fun getBalance() = liveData(Dispatchers.IO) {
-        if(accoundId.get()?.isEmpty()!!  && privateKey.get()?.isEmpty()!!) return@liveData
+        if(!isLoggedIn()) return@liveData
         emit(Resource.loading(data = null))
         try {
             emit(Resource.success(data = mainRepository.getBalance(accoundId.get().toString(),privateKey.get().toString())))
@@ -40,64 +44,43 @@ class LoadWalletViewModel(private val mainRepository: MainRepository, private va
     }
 
 
-    fun makeTransactionFive(account: String, privateKey: String) = liveData(Dispatchers.IO) {
+    fun makeTransactionFive() = liveData(Dispatchers.IO) {
+        if(!isLoggedIn()){
+            mutableErrorListener.postValue("Please load your account first.")
+            return@liveData
+        }
+        if(!isBalanceAvailable()){
+            mutableErrorListener.postValue("Not enough balance! Please buy HBar to play this quiz")
+            return@liveData
+        }
         emit(Resource.loading(data = null))
         try {
-            emit(Resource.success(data = mainRepository.makeTransactionFive(account,privateKey)))
+            emit(Resource.success(data = mainRepository.makeTransactionFive(accoundId.get().toString(),privateKey.get().toString())))
         } catch (exception: Exception) {
             emit(Resource.error(data = null, message = exception.message ?: "Error Occurred!"))
         }
     }
 
-    fun isFormValid(): Boolean {
 
-
-        if(accoundId.get().toString().isEmpty()){
-            errorAccountId.set("Cannot be empty!")
-            return false
-        }else {
-            errorAccountId.set(null);
-        }
-        if(privateKey.get().toString().isEmpty()){
-            errorPrivateKey.set("Cannot be empty!")
-            return false
-        }else{
-            errorPrivateKey.set(null)
-        }
-        return true
-    }
-
-
-    fun loadProfile() {
-
+    fun loadUser() {
         if(isLoggedIn()){
-            val profile = getProfile()
-            accoundId.set(profile?.account)
-            privateKey.set(profile?.pk)
-            balance.set(profile?.balance)
-            mutableProfileInfo.value = profile
+            val user = getCurrentUser()
+            accoundId.set(user?.account)
+            privateKey.set(user?.privateKey)
+            mutableUserProfile.value = user
         }
-
     }
 
-    fun clearFormError(){
-        errorPrivateKey.set(null)
-        errorAccountId.set(null)
+    fun saveBalance(b: String) {
+        val user =  getCurrentUser()
+        user?.balance = b
+        balance.set(b)
+        user?.let { local.setCurrentUser(it) }
+        loadUser()
     }
 
-
-
-    fun saveProfile(balance: String) {
-
-        val profileInfo =  ProfileInfo(accoundId.get().toString().trim().replace("\\s".toRegex(), ""), privateKey.get().toString().trim().replace("\\s".toRegex(), ""), balance)
-
-        local.setCurrentProfile(profileInfo)
-        mutableProfileInfo.value = profileInfo
-        loadProfile()
-    }
-
-    fun getProfile() : ProfileInfo? {
-        return local.getCurrentProfile()
+    private fun getCurrentUser() : UserProfile? {
+        return local.getCurrentUser()
     }
 
     fun isLoggedIn() : Boolean {
@@ -106,5 +89,10 @@ class LoadWalletViewModel(private val mainRepository: MainRepository, private va
 
     fun refreshBalance() {
         mutableRefreshBalance.value = Unit
+    }
+
+    private fun isBalanceAvailable() : Boolean{
+
+        return  balance.get().toString().toDouble() > 10
     }
 }

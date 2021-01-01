@@ -26,6 +26,21 @@ class LocalAuthRepository constructor(context: Context)
         mutableAuthState.postValue(false)
     }
 
+
+    override fun getCurrentUser(): UserProfile? =
+        getData("userProfile", UserProfile::class)
+
+    override fun setCurrentUser(userProfile: UserProfile) {
+        putData("userProfile", userProfile)
+        putData("hasEverLogin", true)
+        mutableAuthState.postValue(true)
+    }
+
+    override fun clearCurrentUser() {
+        putData("userProfile", null)
+        mutableAuthState.postValue(false)
+    }
+
     override fun observeAuthState(): LiveData<Boolean> =
         mutableAuthState
 }
